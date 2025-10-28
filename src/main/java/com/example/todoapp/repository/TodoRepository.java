@@ -14,7 +14,7 @@ import java.util.List;
 
 @Repository
 public interface TodoRepository extends JpaRepository<Todo, Long> {
-    // ✅ QUERY 1: Sadece ID'leri getir (pagination ile)
+
     @Query("SELECT DISTINCT t.id FROM Todo t LEFT JOIN t.tags tag_element WHERE " +
             "(:completed IS NULL OR t.completed = :completed) AND " +
             "(:priority IS NULL OR t.priority = :priority) AND " +
@@ -32,7 +32,6 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
             Pageable pageable
     );
 
-    // ✅ QUERY 2: Bu ID'lere ait
-    @Query("SELECT DISTINCT t FROM Todo t LEFT JOIN FETCH t.tags WHERE t.id IN :ids ORDER BY t.id DESC")
+    @Query("SELECT DISTINCT t FROM Todo t LEFT JOIN FETCH t.tags WHERE t.id IN :ids")
     List<Todo> findByIdsWithTags(@Param("ids") List<Long> ids);
 }

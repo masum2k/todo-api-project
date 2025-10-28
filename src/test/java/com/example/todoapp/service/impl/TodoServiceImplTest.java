@@ -52,7 +52,6 @@ class TodoServiceImplTest {
 
     @Test
     void getTodoById_whenTodoExists_shouldReturnTodoResponse() {
-
         when(todoRepository.findById(1L)).thenReturn(Optional.of(sampleTodo));
 
         TodoResponse actualResponse = todoService.getTodoById(1L);
@@ -66,7 +65,6 @@ class TodoServiceImplTest {
 
     @Test
     void getTodoById_whenTodoDoesNotExist_shouldThrowResourceNotFoundException() {
-
         when(todoRepository.findById(99L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(
@@ -75,13 +73,11 @@ class TodoServiceImplTest {
         );
 
         assertThat(exception.getMessage()).isEqualTo("Todo not found with id: 99");
-
         verify(todoRepository).findById(99L);
     }
 
     @Test
     void createTodo_shouldSaveAndReturnTodoResponse() {
-
         TodoCreateRequest createRequest = new TodoCreateRequest();
         createRequest.setTitle("Yeni Test Todo");
         createRequest.setDescription("Bu bir test açıklamasıdır.");
@@ -107,23 +103,19 @@ class TodoServiceImplTest {
 
     @Test
     void deleteTodo_whenTodoExists_shouldDeleteTodo() {
-
         Long todoId = 1L;
 
         when(todoRepository.existsById(todoId)).thenReturn(true);
-
         doNothing().when(todoRepository).deleteById(todoId);
 
         todoService.deleteTodo(todoId);
 
         verify(todoRepository, times(1)).existsById(todoId);
-
         verify(todoRepository, times(1)).deleteById(todoId);
     }
 
     @Test
     void deleteTodo_whenTodoDoesNotExist_shouldThrowResourceNotFoundException() {
-
         Long todoId = 99L;
 
         when(todoRepository.existsById(todoId)).thenReturn(false);
@@ -136,19 +128,16 @@ class TodoServiceImplTest {
         assertThat(exception.getMessage()).isEqualTo("Todo not found with id: " + todoId);
 
         verify(todoRepository, times(1)).existsById(todoId);
-
         verify(todoRepository, never()).deleteById(todoId);
     }
 
     @Test
     void updateTodo_whenTodoExists_shouldUpdateAndReturnTodoResponse() {
-
         TodoUpdateRequest updateRequest = new TodoUpdateRequest();
         updateRequest.setTitle("Güncellenmiş Başlık");
         updateRequest.setCompleted(true);
 
         when(todoRepository.findById(1L)).thenReturn(Optional.of(sampleTodo));
-
         when(todoRepository.save(any(Todo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         TodoResponse actualResponse = todoService.updateTodo(1L, updateRequest);
@@ -159,13 +148,11 @@ class TodoServiceImplTest {
         assertThat(actualResponse.isCompleted()).isTrue();
 
         verify(todoRepository, times(1)).findById(1L);
-
         verify(todoRepository, times(1)).save(any(Todo.class));
     }
 
     @Test
     void updateTodo_whenTodoDoesNotExist_shouldThrowResourceNotFoundException() {
-
         Long todoId = 99L;
 
         TodoUpdateRequest updateRequest = new TodoUpdateRequest();
@@ -186,9 +173,7 @@ class TodoServiceImplTest {
 
     @Test
     void updateTodoCompletion_whenTodoExists_shouldUpdateCompletionAndReturnResponse() {
-
         when(todoRepository.findById(1L)).thenReturn(Optional.of(sampleTodo));
-
         when(todoRepository.save(any(Todo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         boolean newCompletionState = true;
@@ -205,7 +190,6 @@ class TodoServiceImplTest {
 
     @Test
     void updateTodoCompletion_whenTodoDoesNotExist_shouldThrowResourceNotFoundException() {
-
         Long todoId = 99L;
 
         when(todoRepository.findById(todoId)).thenReturn(Optional.empty());
@@ -216,37 +200,43 @@ class TodoServiceImplTest {
         );
 
         assertThat(exception.getMessage()).isEqualTo("Todo not found with id: " + todoId);
-
         verify(todoRepository, never()).save(any(Todo.class));
     }
 
     @Test
-    void getAllTodos_whenNoFilter_shouldCallFindDynamicWithNulls() {
+    void getAllTodos_whenNoFilter_shouldReturnPagedTodos() {
+        List<Long> todoIds = List.of(1L, 2L);
+        Page<Long> idPage = new PageImpl<>(todoIds, pageable, todoIds.size());
+
         Todo sampleTodo2 = new Todo();
         sampleTodo2.setId(2L);
         sampleTodo2.setTitle("İkinci Test Todo");
-
         List<Todo> todoList = List.of(sampleTodo, sampleTodo2);
-        Page<Todo> todoPage = new PageImpl<>(todoList, pageable, todoList.size());
 
-        when(todoRepository.findDynamic(isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
-                .thenReturn(todoPage);
+        when(todoRepository.findTodoIds(isNull(), isNull(), isNull(), isNull(), any(LocalDateTime.class), any(Pageable.class)))
+                .thenReturn(idPage);
+
+        when(todoRepository.findByIdsWithTags(todoIds))
+                .thenReturn(todoList);
 
         Page<TodoResponse> actualPage = todoService.getAllTodos(null, null, null, null, pageable);
 
         assertThat(actualPage).isNotNull();
         assertThat(actualPage.getTotalElements()).isEqualTo(2);
         assertThat(actualPage.getContent().get(0).getId()).isEqualTo(1L);
+        assertThat(actualPage.getContent().get(1).getId()).isEqualTo(2L);
+
 
         verify(todoRepository, times(1))
-                .findDynamic(isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class));
+                .findTodoIds(isNull(), isNull(), isNull(), isNull(), any(LocalDateTime.class), any(Pageable.class));
+        verify(todoRepository, times(1)).findByIdsWithTags(todoIds);
     }
 
     @Test
     void getAllTodos_whenNoTodosExist_shouldReturnEmptyPage() {
-        Page<Todo> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        Page<Long> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
-        when(todoRepository.findDynamic(isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+        when(todoRepository.findTodoIds(isNull(), isNull(), isNull(), isNull(), any(LocalDateTime.class), any(Pageable.class)))
                 .thenReturn(emptyPage);
 
         Page<TodoResponse> actualPage = todoService.getAllTodos(null, null, null, null, pageable);
@@ -255,17 +245,21 @@ class TodoServiceImplTest {
         assertThat(actualPage.isEmpty()).isTrue();
 
         verify(todoRepository, times(1))
-                .findDynamic(isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class));
+                .findTodoIds(isNull(), isNull(), isNull(), isNull(), any(LocalDateTime.class), any(Pageable.class));
+        verify(todoRepository, never()).findByIdsWithTags(anyList());
     }
 
     @Test
-    void getAllTodos_whenCompletedFilterIsTrue_shouldCallFindDynamicWithCompleted() {
+    void getAllTodos_whenCompletedFilterIsTrue_shouldReturnOnlyCompletedTodos() {
         sampleTodo.setCompleted(true);
+        List<Long> todoIds = List.of(1L);
+        Page<Long> idPage = new PageImpl<>(todoIds, pageable, todoIds.size());
         List<Todo> todoList = List.of(sampleTodo);
-        Page<Todo> todoPage = new PageImpl<>(todoList, pageable, todoList.size());
 
-        when(todoRepository.findDynamic(eq(true), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
-                .thenReturn(todoPage);
+        when(todoRepository.findTodoIds(eq(true), isNull(), isNull(), isNull(), any(LocalDateTime.class), any(Pageable.class)))
+                .thenReturn(idPage);
+        when(todoRepository.findByIdsWithTags(todoIds))
+                .thenReturn(todoList);
 
         Page<TodoResponse> actualPage = todoService.getAllTodos(true, null, null, null, pageable);
 
@@ -274,17 +268,20 @@ class TodoServiceImplTest {
         assertThat(actualPage.getContent().get(0).isCompleted()).isTrue();
 
         verify(todoRepository, times(1))
-                .findDynamic(eq(true), isNull(), isNull(), isNull(), isNull(), any(Pageable.class));
+                .findTodoIds(eq(true), isNull(), isNull(), isNull(), any(LocalDateTime.class), any(Pageable.class));
     }
 
     @Test
-    void getAllTodos_whenPriorityFilterIsHigh_shouldCallFindDynamicWithPriority() {
+    void getAllTodos_whenPriorityFilterIsHigh_shouldReturnOnlyHighPriorityTodos() {
         sampleTodo.setPriority(Priority.HIGH);
+        List<Long> todoIds = List.of(1L);
+        Page<Long> idPage = new PageImpl<>(todoIds, pageable, todoIds.size());
         List<Todo> todoList = List.of(sampleTodo);
-        Page<Todo> todoPage = new PageImpl<>(todoList, pageable, todoList.size());
 
-        when(todoRepository.findDynamic(isNull(), eq(Priority.HIGH), isNull(), isNull(), isNull(), any(Pageable.class)))
-                .thenReturn(todoPage);
+        when(todoRepository.findTodoIds(isNull(), eq(Priority.HIGH), isNull(), isNull(), any(LocalDateTime.class), any(Pageable.class)))
+                .thenReturn(idPage);
+        when(todoRepository.findByIdsWithTags(todoIds))
+                .thenReturn(todoList);
 
         Page<TodoResponse> actualPage = todoService.getAllTodos(null, Priority.HIGH, null, null, pageable);
 
@@ -293,19 +290,21 @@ class TodoServiceImplTest {
         assertThat(actualPage.getContent().get(0).getPriority()).isEqualTo(Priority.HIGH);
 
         verify(todoRepository, times(1))
-                .findDynamic(isNull(), eq(Priority.HIGH), isNull(), isNull(), isNull(), any(Pageable.class));
+                .findTodoIds(isNull(), eq(Priority.HIGH), isNull(), isNull(), any(LocalDateTime.class), any(Pageable.class));
     }
 
     @Test
-    void getAllTodos_whenTagFilterExists_shouldCallFindDynamicWithTag() {
+    void getAllTodos_whenTagFilterExists_shouldReturnTodosWithTag() {
         sampleTodo.setTags(List.of("java", "spring"));
+        List<Long> todoIds = List.of(1L);
+        Page<Long> idPage = new PageImpl<>(todoIds, pageable, todoIds.size());
         List<Todo> todoList = List.of(sampleTodo);
-        Page<Todo> todoPage = new PageImpl<>(todoList, pageable, todoList.size());
-
         String tagToSearch = "java";
 
-        when(todoRepository.findDynamic(isNull(), isNull(), eq(tagToSearch), isNull(), isNull(), any(Pageable.class)))
-                .thenReturn(todoPage);
+        when(todoRepository.findTodoIds(isNull(), isNull(), eq(tagToSearch), isNull(), any(LocalDateTime.class), any(Pageable.class)))
+                .thenReturn(idPage);
+        when(todoRepository.findByIdsWithTags(todoIds))
+                .thenReturn(todoList);
 
         Page<TodoResponse> actualPage = todoService.getAllTodos(null, null, tagToSearch, null, pageable);
 
@@ -314,17 +313,20 @@ class TodoServiceImplTest {
         assertThat(actualPage.getContent().get(0).getTags()).contains("java");
 
         verify(todoRepository, times(1))
-                .findDynamic(isNull(), isNull(), eq(tagToSearch), isNull(), isNull(), any(Pageable.class));
+                .findTodoIds(isNull(), isNull(), eq(tagToSearch), isNull(), any(LocalDateTime.class), any(Pageable.class));
     }
 
     @Test
-    void getAllTodos_whenOverdueFilterIsTrue_shouldCallFindDynamicWithOverdue() {
+    void getAllTodos_whenOverdueFilterIsTrue_shouldReturnOverdueTodos() {
         sampleTodo.setDeadline(LocalDateTime.now().minusDays(1));
+        List<Long> todoIds = List.of(1L);
+        Page<Long> idPage = new PageImpl<>(todoIds, pageable, todoIds.size());
         List<Todo> todoList = List.of(sampleTodo);
-        Page<Todo> todoPage = new PageImpl<>(todoList, pageable, todoList.size());
 
-        when(todoRepository.findDynamic(isNull(), isNull(), isNull(), eq(true), any(LocalDateTime.class), any(Pageable.class)))
-                .thenReturn(todoPage);
+        when(todoRepository.findTodoIds(isNull(), isNull(), isNull(), eq(true), any(LocalDateTime.class), any(Pageable.class)))
+                .thenReturn(idPage);
+        when(todoRepository.findByIdsWithTags(todoIds))
+                .thenReturn(todoList);
 
         Page<TodoResponse> actualPage = todoService.getAllTodos(null, null, null, true, pageable);
 
@@ -333,6 +335,6 @@ class TodoServiceImplTest {
         assertThat(actualPage.getContent().get(0).getId()).isEqualTo(1L);
 
         verify(todoRepository, times(1))
-                .findDynamic(isNull(), isNull(), isNull(), eq(true), any(LocalDateTime.class), any(Pageable.class));
+                .findTodoIds(isNull(), isNull(), isNull(), eq(true), any(LocalDateTime.class), any(Pageable.class));
     }
 }

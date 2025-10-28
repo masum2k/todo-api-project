@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp; // Bu importu eklememiz gerekiyor
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,7 +38,7 @@ public class Todo {
     @Enumerated(EnumType.STRING)
     private Priority priority;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "todo_tags", joinColumns = @JoinColumn(name = "todo_id"))
     @Column(name = "tag")
     private List<String> tags;

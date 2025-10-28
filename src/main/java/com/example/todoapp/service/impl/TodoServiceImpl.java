@@ -18,10 +18,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -73,35 +69,27 @@ public class TodoServiceImpl implements TodoService {
     @Override
     public Page<TodoResponse> getAllTodos(Boolean completed, Priority priority,
                                           String tag, Boolean overdue, Pageable pageable) {
-        LocalDateTime now = (overdue != null) ? LocalDateTime.now() : null;
 
-        // ✅ 1. Önce ID'leri pagination ile getir
+        LocalDateTime now = LocalDateTime.now();
+
         Page<Long> todoIdsPage = todoRepository.findTodoIds(
                 completed, priority, tag, overdue, now, pageable
         );
 
-        // Eğer sonuç yoksa boş page dön
-        if (todoIdsPage.isEmpty()) {
-            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        if (todoIdsPage.getContent().isEmpty()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, todoIdsPage.getTotalElements());
         }
 
-        // ✅ 2.
         List<Todo> todos = todoRepository.findByIdsWithTags(todoIdsPage.getContent());
 
-        // ✅ 3. ID sıralamasını koru (önemli!)
-        Map<Long, Todo> todoMap = todos.stream()
-                .collect(Collectors.toMap(Todo::getId, Function.identity()));
-
-        List<Todo> orderedTodos = todoIdsPage.getContent().stream()
-                .map(todoMap::get)
-                .filter(Objects::nonNull)
-                .toList();
-
-        // ✅ 4. DTO'ya çevir ve Page oluştur
-        List<TodoResponse> responses = orderedTodos.stream()
+        List<TodoResponse> todoResponses = todos.stream()
                 .map(TodoMapper::toResponse)
                 .toList();
 
-        return new PageImpl<>(responses, pageable, todoIdsPage.getTotalElements());
+        return new PageImpl<>(
+                todoResponses,
+                pageable,
+                todoIdsPage.getTotalElements()
+        );
     }
 }
