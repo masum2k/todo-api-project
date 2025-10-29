@@ -7,4 +7,6 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CurrentWeather {
     private double temp_c;
+    private double feelslike_c;
+    private int humidity;
 }

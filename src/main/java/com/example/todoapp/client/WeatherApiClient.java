@@ -11,6 +11,6 @@ public interface WeatherApiClient {
     @GetMapping("/current.json")
     WeatherResponse getCurrentWeather(
             @RequestParam("key") String apiKey,
-            @RequestParam("q") String location
+            @RequestParam("q") String city
     );
 }

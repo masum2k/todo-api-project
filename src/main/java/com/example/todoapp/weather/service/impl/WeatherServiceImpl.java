@@ -23,7 +23,9 @@ public class WeatherServiceImpl implements WeatherService {
 
             if (response != null && response.getCurrent() != null) {
                 double temp = response.getCurrent().getTemp_c();
-                return city + " için şu anki sıcaklık: " + temp + "°C";
+                double feels_like = response.getCurrent().getFeelslike_c();
+                int humidity = response.getCurrent().getHumidity();
+                return city + " için şu anki sıcaklık: " + temp + "°C and feels like: " + feels_like + "and humidity is: "+ humidity;
             }
             return city + " için hava durumu bilgisi alınamadı.";
         } catch (Exception e) {
