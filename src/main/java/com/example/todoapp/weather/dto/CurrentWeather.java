@@ -1,12 +1,11 @@
 package com.example.todoapp.weather.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
 
-@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CurrentWeather {
-    private double temp_c;
-    private double feelslike_c;
-    private int humidity;
+public record CurrentWeather(
+        double temp_c,
+        double feelslike_c,
+        int humidity
+) {
 }

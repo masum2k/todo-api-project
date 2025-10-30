@@ -17,11 +17,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -41,12 +42,17 @@ class TodoControllerTest {
     @Test
     void getTodoById_whenTodoExists_shouldReturn200AndTodoResponse() throws Exception {
 
-        TodoResponse fakeResponse = new TodoResponse();
-        fakeResponse.setId(1L);
-        fakeResponse.setTitle("Controller Test Todo");
-        fakeResponse.setCompleted(false);
-        fakeResponse.setPriority(Priority.MEDIUM);
-        fakeResponse.setCreatedAt(LocalDateTime.now());
+        long now = Instant.now().toEpochMilli();
+        TodoResponse fakeResponse = new TodoResponse(
+                1L,
+                "Controller Test Todo",
+                null,
+                false,
+                now,
+                null,
+                Priority.MEDIUM,
+                null
+        );
 
         when(todoService.getTodoById(1L)).thenReturn(fakeResponse);
 
@@ -58,7 +64,8 @@ class TodoControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.title").value("Controller Test Todo"))
                 .andExpect(jsonPath("$.completed").value(false))
-                .andExpect(jsonPath("$.priority").value("MEDIUM"));
+                .andExpect(jsonPath("$.priority").value("MEDIUM"))
+                .andExpect(jsonPath("$.createdAt").value(now));
     }
 
     @Test
@@ -79,16 +86,25 @@ class TodoControllerTest {
     @Test
     void createTodo_whenRequestIsValid_shouldReturn201CreatedAndTodoResponse() throws Exception {
 
-        TodoCreateRequest createRequest = new TodoCreateRequest();
-        createRequest.setTitle("Yeni Todo Oluştur");
-        createRequest.setPriority(Priority.LOW);
+        TodoCreateRequest createRequest = new TodoCreateRequest(
+                "Yeni Todo Oluştur",
+                null,
+                null,
+                Priority.LOW,
+                null
+        );
 
-        TodoResponse fakeResponse = new TodoResponse();
-        fakeResponse.setId(1L);
-        fakeResponse.setTitle("Yeni Todo Oluştur");
-        fakeResponse.setPriority(Priority.LOW);
-        fakeResponse.setCompleted(false);
-        fakeResponse.setCreatedAt(LocalDateTime.now()); // bunu kontrol etme
+        long now = Instant.now().toEpochMilli();
+        TodoResponse fakeResponse = new TodoResponse(
+                1L,
+                "Yeni Todo Oluştur",
+                null,
+                false,
+                now,
+                null,
+                Priority.LOW,
+                null
+        );
 
         when(todoService.createTodo(any(TodoCreateRequest.class))).thenReturn(fakeResponse);
 
@@ -106,9 +122,13 @@ class TodoControllerTest {
     @Test
     void createTodo_whenTitleIsBlank_shouldReturn400BadRequest() throws Exception {
 
-        TodoCreateRequest invalidRequest = new TodoCreateRequest();
-        invalidRequest.setTitle("");
-        invalidRequest.setDescription("Bu test başarısız olmalı");
+        TodoCreateRequest invalidRequest = new TodoCreateRequest(
+                "",
+                "Bu test başarısız olmalı",
+                null,
+                Priority.LOW,
+                null
+        );
 
         String jsonRequest = objectMapper.writeValueAsString(invalidRequest);
 
@@ -120,7 +140,7 @@ class TodoControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.statusCode").value(400))
-                .andExpect(jsonPath("$.message").value("Validation Error(s): title: Title (başlık) alanı boş olamaz."));
+                .andExpect(jsonPath("$.message", containsString("title: Title (başlık) alanı boş olamaz.")));
 
         verify(todoService, never()).createTodo(any(TodoCreateRequest.class));
     }
@@ -150,7 +170,6 @@ class TodoControllerTest {
                         delete("/api/todos/" + todoId)
                 )
                 .andExpect(status().isNotFound())
-
                 .andExpect(jsonPath("$.statusCode").value(404))
                 .andExpect(jsonPath("$.message").value("Todo not found with id: " + todoId));
 
@@ -162,15 +181,25 @@ class TodoControllerTest {
 
         Long todoId = 1L;
 
-        TodoUpdateRequest updateRequest = new TodoUpdateRequest();
-        updateRequest.setTitle("Güncellenmiş Başlık");
-        updateRequest.setCompleted(true);
+        TodoUpdateRequest updateRequest = new TodoUpdateRequest(
+                "Güncellenmiş Başlık",
+                null,
+                true,
+                null,
+                null,
+                null
+        );
 
-        TodoResponse fakeResponse = new TodoResponse();
-        fakeResponse.setId(todoId);
-        fakeResponse.setTitle("Güncellenmiş Başlık");
-        fakeResponse.setCompleted(true);
-        fakeResponse.setPriority(Priority.LOW);
+        TodoResponse fakeResponse = new TodoResponse(
+                todoId,
+                "Güncellenmiş Başlık",
+                null,
+                true,
+                Instant.now().toEpochMilli(),
+                null,
+                Priority.LOW,
+                null
+        );
 
         when(todoService.updateTodo(any(Long.class), any(TodoUpdateRequest.class)))
                 .thenReturn(fakeResponse);
@@ -193,8 +222,14 @@ class TodoControllerTest {
 
         long todoId = 99L;
 
-        TodoUpdateRequest updateRequest = new TodoUpdateRequest();
-        updateRequest.setTitle("Bu güncelleme başarısız olmalı");
+        TodoUpdateRequest updateRequest = new TodoUpdateRequest(
+                "Bu güncelleme başarısız olmalı",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
 
         when(todoService.updateTodo(any(Long.class), any(TodoUpdateRequest.class)))
                 .thenThrow(new ResourceNotFoundException("Todo not found with id: " + todoId));
@@ -215,9 +250,13 @@ class TodoControllerTest {
     void updateTodo_whenDescriptionIsTooLong_shouldReturn400BadRequest() throws Exception {
 
         long todoId = 1L;
-        TodoUpdateRequest invalidRequest = new TodoUpdateRequest();
-        String longDescription = "1234567890123456789012345678901";
-        invalidRequest.setDescription(longDescription);
+        String longDescription = "a".repeat(256);
+
+        TodoUpdateRequest invalidRequest = new TodoUpdateRequest(
+                null,
+                longDescription,
+                null, null, null, null
+        );
 
         String jsonRequest = objectMapper.writeValueAsString(invalidRequest);
 
@@ -229,7 +268,7 @@ class TodoControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.statusCode").value(400))
-                .andExpect(jsonPath("$.message").value("Validation Error(s): description: Açıklama (description) en fazla 30 karakter olabilir."));
+                .andExpect(jsonPath("$.message", containsString("description: Açıklama en fazla 255 karakter olabilir.")));
 
         verify(todoService, never()).updateTodo(any(Long.class), any(TodoUpdateRequest.class));
     }
@@ -240,10 +279,14 @@ class TodoControllerTest {
         long todoId = 1L;
         boolean isCompleted = true;
 
-        TodoResponse fakeResponse = new TodoResponse();
-        fakeResponse.setId(todoId);
-        fakeResponse.setTitle("Tamamlandı olarak işaretlendi");
-        fakeResponse.setCompleted(isCompleted);
+        TodoResponse fakeResponse = new TodoResponse(
+                todoId,
+                "Tamamlandı olarak işaretlendi",
+                null,
+                isCompleted,
+                Instant.now().toEpochMilli(),
+                null, null, null
+        );
 
         when(todoService.updateTodoCompletion(todoId, isCompleted)).thenReturn(fakeResponse);
 
@@ -252,7 +295,6 @@ class TodoControllerTest {
                                 .param("isCompleted", "true")
                 )
                 .andExpect(status().isOk())
-
                 .andExpect(jsonPath("$.id").value(todoId))
                 .andExpect(jsonPath("$.title").value("Tamamlandı olarak işaretlendi"))
                 .andExpect(jsonPath("$.completed").value(true));
@@ -274,7 +316,6 @@ class TodoControllerTest {
                                 .param("isCompleted", "true")
                 )
                 .andExpect(status().isNotFound())
-
                 .andExpect(jsonPath("$.statusCode").value(404))
                 .andExpect(jsonPath("$.message").value("Todo not found with id: " + todoId));
 
@@ -284,9 +325,9 @@ class TodoControllerTest {
     @Test
     void getAllTodos_whenNoFilter_shouldReturn200AndTodoPage() throws Exception {
 
-        TodoResponse fakeTodo1 = new TodoResponse();
-        fakeTodo1.setId(1L);
-        fakeTodo1.setTitle("İlk Todo");
+        TodoResponse fakeTodo1 = new TodoResponse(
+                1L, "İlk Todo", null, false, Instant.now().toEpochMilli(), null, null, null
+        );
         List<TodoResponse> fakeList = List.of(fakeTodo1);
         Page<TodoResponse> fakePage = new PageImpl<>(fakeList, Pageable.ofSize(10), fakeList.size());
 
@@ -323,10 +364,9 @@ class TodoControllerTest {
     @Test
     void getAllTodos_whenTagFilterExists_shouldReturn200AndFilteredPage() throws Exception {
 
-        TodoResponse fakeTodo1 = new TodoResponse();
-        fakeTodo1.setId(1L);
-        fakeTodo1.setTitle("Java Todo");
-        fakeTodo1.setTags(List.of("java"));
+        TodoResponse fakeTodo1 = new TodoResponse(
+                1L, "Java Todo", null, false, Instant.now().toEpochMilli(), null, null, List.of("java")
+        );
 
         List<TodoResponse> fakeList = List.of(fakeTodo1);
         Page<TodoResponse> fakePage = new PageImpl<>(fakeList, Pageable.ofSize(10), fakeList.size());
@@ -350,9 +390,9 @@ class TodoControllerTest {
     @Test
     void getAllTodos_whenOverdueFilterExists_shouldReturn200AndFilteredPage() throws Exception {
 
-        TodoResponse fakeTodo1 = new TodoResponse();
-        fakeTodo1.setId(1L);
-        fakeTodo1.setTitle("Gecikmiş Görev");
+        TodoResponse fakeTodo1 = new TodoResponse(
+                1L, "Gecikmiş Görev", null, false, Instant.now().toEpochMilli(), null, null, null
+        );
 
         List<TodoResponse> fakeList = List.of(fakeTodo1);
         Page<TodoResponse> fakePage = new PageImpl<>(fakeList, Pageable.ofSize(10), fakeList.size());

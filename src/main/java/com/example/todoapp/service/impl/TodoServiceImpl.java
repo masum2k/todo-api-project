@@ -14,39 +14,47 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
-import java.time.LocalDateTime;
+import java.time.Instant; // LocalDateTime yerine bu import edildi
 import java.util.Collections;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Validated
 public class TodoServiceImpl implements TodoService {
 
     private static final String TODO_NOT_FOUND_MESSAGE = "Todo not found with id: ";
     private final TodoRepository todoRepository;
+    private final TodoMapper todoMapper;
 
     @Override
     public TodoResponse createTodo(TodoCreateRequest createRequest) {
-        Todo todo = TodoMapper.toEntity(createRequest);
+        Todo todo = todoMapper.toEntity(createRequest);
         Todo savedTodo = todoRepository.save(todo);
-        return TodoMapper.toResponse(savedTodo);
+
+        return todoMapper.toResponse(savedTodo);
     }
 
     @Override
     public TodoResponse getTodoById(Long id) {
         Todo todo = todoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id));
-        return TodoMapper.toResponse(todo);
+
+        return todoMapper.toResponse(todo);
     }
 
     @Override
     public TodoResponse updateTodo(Long id, TodoUpdateRequest updateRequest) {
         Todo existingTodo = todoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id));
-        TodoMapper.updateEntity(existingTodo, updateRequest);
+
+        todoMapper.updateEntity(updateRequest, existingTodo);
+
         Todo updatedTodo = todoRepository.save(existingTodo);
-        return TodoMapper.toResponse(updatedTodo);
+
+        return todoMapper.toResponse(updatedTodo);
     }
 
     @Override
@@ -63,14 +71,16 @@ public class TodoServiceImpl implements TodoService {
                 .orElseThrow(() -> new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id));
         existingTodo.setCompleted(isCompleted);
         Todo updatedTodo = todoRepository.save(existingTodo);
-        return TodoMapper.toResponse(updatedTodo);
+
+        return todoMapper.toResponse(updatedTodo);
     }
 
     @Override
     public Page<TodoResponse> getAllTodos(Boolean completed, Priority priority,
                                           String tag, Boolean overdue, Pageable pageable) {
 
-        LocalDateTime now = LocalDateTime.now();
+        // HATA BURADAYDI: LocalDateTime -> long (epoch)
+        long now = Instant.now().toEpochMilli();
 
         Page<Long> todoIdsPage = todoRepository.findTodoIds(
                 completed, priority, tag, overdue, now, pageable
@@ -79,12 +89,10 @@ public class TodoServiceImpl implements TodoService {
         if (todoIdsPage.getContent().isEmpty()) {
             return new PageImpl<>(Collections.emptyList(), pageable, todoIdsPage.getTotalElements());
         }
-
         List<Todo> todos = todoRepository.findByIdsWithTags(todoIdsPage.getContent());
 
-        List<TodoResponse> todoResponses = todos.stream()
-                .map(TodoMapper::toResponse)
-                .toList();
+
+        List<TodoResponse> todoResponses = todoMapper.toResponseList(todos);
 
         return new PageImpl<>(
                 todoResponses,

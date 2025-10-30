@@ -4,62 +4,25 @@ import com.example.todoapp.dto.TodoCreateRequest;
 import com.example.todoapp.dto.TodoResponse;
 import com.example.todoapp.dto.TodoUpdateRequest;
 import com.example.todoapp.model.Todo;
+import org.mapstruct.*;
 
+import java.time.Instant;
 import java.util.List;
 
-public class TodoMapper {
+@Mapper(componentModel = "spring", imports = {Instant.class})
+public interface TodoMapper {
 
-    public static TodoResponse toResponse(Todo todo) {
+    TodoResponse toResponse(Todo todo);
 
-        TodoResponse response = new TodoResponse();
-        response.setId(todo.getId());
-        response.setTitle(todo.getTitle());
-        response.setDescription(todo.getDescription());
-        response.setCompleted(todo.isCompleted());
-        response.setCreatedAt(todo.getCreatedAt());
-        response.setDeadline(todo.getDeadline());
-        response.setPriority(todo.getPriority());
-        response.setTags(todo.getTags());
-        return response;
-    }
+    List<TodoResponse> toResponseList(List<Todo> todos);
 
-    public static List<TodoResponse> toResponseList(List<Todo> todos) {
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", expression = "java(Instant.now().toEpochMilli())")
+    @Mapping(target = "completed", constant = "false")
+    Todo toEntity(TodoCreateRequest request);
 
-        return todos.stream()
-                .map(TodoMapper::toResponse)
-                .toList();
-    }
-
-    public static Todo toEntity(TodoCreateRequest request) {
-
-        Todo todo = new Todo();
-        todo.setTitle(request.getTitle());
-        todo.setDescription(request.getDescription());
-        todo.setDeadline(request.getDeadline());
-        todo.setPriority(request.getPriority());
-        todo.setTags(request.getTags());
-        return todo;
-    }
-
-    public static void updateEntity(Todo todo, TodoUpdateRequest request) {
-
-        if (request.getTitle() != null) {
-            todo.setTitle(request.getTitle());
-        }
-        if (request.getDescription() != null) {
-            todo.setDescription(request.getDescription());
-        }
-        if (request.getCompleted() != null) {
-            todo.setCompleted(request.getCompleted());
-        }
-        if (request.getDeadline() != null) {
-            todo.setDeadline(request.getDeadline());
-        }
-        if (request.getPriority() != null) {
-            todo.setPriority(request.getPriority());
-        }
-        if (request.getTags() != null) {
-            todo.setTags(request.getTags());
-        }
-    }
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    void updateEntity(TodoUpdateRequest request, @MappingTarget Todo todo);
 }

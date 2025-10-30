@@ -9,11 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface TodoRepository extends JpaRepository<Todo, Long> {
+public interface TodoRepository extends JpaRepository<Todo, Long> { //query yerine
 
     @Query("SELECT DISTINCT t.id FROM Todo t LEFT JOIN t.tags tag_element WHERE " +
             "(:completed IS NULL OR t.completed = :completed) AND " +
@@ -28,7 +27,7 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
             @Param("priority") Priority priority,
             @Param("tag") String tag,
             @Param("overdue") Boolean overdue,
-            @Param("now") LocalDateTime now,
+            @Param("now") long now,
             Pageable pageable
     );
 
