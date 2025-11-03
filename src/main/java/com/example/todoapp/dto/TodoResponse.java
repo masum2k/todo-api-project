@@ -11,6 +11,7 @@ public record TodoResponse(
         long createdAt,
         Long deadline,
         Priority priority,
-        List<String> tags
+        List<String> tags,
+        String userEmail
 ) {
 }

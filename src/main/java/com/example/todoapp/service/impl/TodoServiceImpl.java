@@ -42,7 +42,8 @@ public class TodoServiceImpl implements TodoService {
             todoEventProducer.sendTodoEvent(new TodoNotificationEvent(
                     savedTodo.getId(),
                     savedTodo.getTitle(),
-                    savedTodo.getDeadline()
+                    savedTodo.getDeadline(),
+                    savedTodo.getUserEmail()
             ));
         }
 
@@ -69,11 +70,12 @@ public class TodoServiceImpl implements TodoService {
 
         Long newDeadline = updatedTodo.getDeadline();
 
-        if (newDeadline != null && !Objects.equals(oldDeadline, newDeadline)) {
+        if (!Objects.equals(oldDeadline, newDeadline)) {
             todoEventProducer.sendTodoEvent(new TodoNotificationEvent(
                     updatedTodo.getId(),
                     updatedTodo.getTitle(),
-                    updatedTodo.getDeadline()
+                    updatedTodo.getDeadline(), // newDeadline (null olabilir)
+                    updatedTodo.getUserEmail()
             ));
         }
 

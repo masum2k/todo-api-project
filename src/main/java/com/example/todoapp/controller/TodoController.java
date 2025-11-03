@@ -52,7 +52,7 @@ public class TodoController {
         todoService.deleteTodo(id);
     }
 
-    @PutMapping("/{id}/completion")
+    @PatchMapping("/{id}/completion")
     public TodoResponse updateTodoCompletion(@PathVariable Long id, @RequestParam boolean isCompleted) {
         return todoService.updateTodoCompletion(id, isCompleted);
     }

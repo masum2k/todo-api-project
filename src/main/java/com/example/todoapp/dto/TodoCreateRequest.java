@@ -1,6 +1,7 @@
 package com.example.todoapp.dto;
 
 import com.example.todoapp.enums.Priority;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -21,6 +22,10 @@ public record TodoCreateRequest(
         Priority priority,
 
         @Size(max = 5, message = "En fazla 5 etiket eklenebilir.")
-        List<String> tags
+        List<String> tags,
+
+        @Email(message = "Geçerli bir e-posta adresi olmalıdır.")
+        @NotBlank(message = "E-posta alanı boş olamaz.")
+                String userEmail
 ) {
 }//record,mail(kafka),schedule

@@ -2,6 +2,7 @@ package com.example.todoapp.model;
 
 import com.example.todoapp.enums.Priority;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -47,4 +48,8 @@ public class Todo {
     @CollectionTable(name = "todo_tags", joinColumns = @JoinColumn(name = "todo_id"))
     @Column(name = "tag")
     private List<String> tags;
+
+    @Email(message = "Geçerli bir e-posta adresi olmalıdır (Entity Validasyonu)")
+    @Column(nullable = false)
+    private String userEmail;
 }

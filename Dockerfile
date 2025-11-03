@@ -16,7 +16,7 @@ RUN ./mvnw dependency:go-offline
 COPY src src
 
 # Projeyi build et (testleri atla)
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -Dmaven.test.skip=true
 
 # --- 2. Aşama: Run (Projenin son imajını oluşturma) ---
 # Daha küçük bir "sadece çalıştırma" (JRE) imajı kullan
