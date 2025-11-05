@@ -16,7 +16,7 @@ public record TodoCreateRequest(
         @Size(max = 255, message = "Açıklama en fazla 255 karakter olabilir.")
         String description,
 
-        Long deadline,
+        Long deadline, //db de localdatetime e çevir
 
         @NotNull(message = "Priority (öncelik) alanı boş olamaz.")
         Priority priority,
@@ -24,7 +24,7 @@ public record TodoCreateRequest(
         @Size(max = 5, message = "En fazla 5 etiket eklenebilir.")
         List<String> tags,
 
-        @Email(message = "Geçerli bir e-posta adresi olmalıdır.")
+        @Email(message = "Geçerli bir e-posta adresi olmalıdır.") //kendi anotasyonunu yaz, domain kontrolü olsun, mesela gotmailde hata versin turkcell.com.tr de onaylasın, @ var mı, custommail
         @NotBlank(message = "E-posta alanı boş olamaz.")
                 String userEmail
 ) {

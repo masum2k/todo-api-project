@@ -52,4 +52,7 @@ public class Todo {
     @Email(message = "Geçerli bir e-posta adresi olmalıdır (Entity Validasyonu)")
     @Column(nullable = false)
     private String userEmail;
+
+    @Column(nullable = false)
+    private boolean reminderSent = false;
 }

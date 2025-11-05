@@ -17,12 +17,12 @@ public interface TodoMapper {
     List<TodoResponse> toResponseList(List<Todo> todos);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", expression = "java(Instant.now().toEpochMilli())")
+    @Mapping(target = "createdAt", expression = "java(Instant.now().toEpochMilli())") //java(Instant.now().toEpochMilli()) burası farklı
     @Mapping(target = "completed", constant = "false")
     Todo toEntity(TodoCreateRequest request);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)//buna bak
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    void updateEntity(TodoUpdateRequest request, @MappingTarget Todo todo);
+    void updateEntity(TodoUpdateRequest request, @MappingTarget Todo todo); // @MappingTarget buna bak
 }

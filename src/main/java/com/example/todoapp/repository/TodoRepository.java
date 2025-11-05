@@ -33,4 +33,10 @@ public interface TodoRepository extends JpaRepository<Todo, Long> { //query yeri
 
     @Query("SELECT DISTINCT t FROM Todo t LEFT JOIN FETCH t.tags WHERE t.id IN :ids")
     List<Todo> findByIdsWithTags(@Param("ids") List<Long> ids);
+
+    @Query("SELECT t FROM Todo t WHERE t.deadline IS NOT NULL " +
+            "AND t.deadline <= :notificationTimeEpochMilli " +
+            "AND t.completed = false " +
+            "AND t.reminderSent = false")
+    List<Todo> findPendingReminders(@Param("notificationTimeEpochMilli") long notificationTimeEpochMilli);
 }
