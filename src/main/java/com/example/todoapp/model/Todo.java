@@ -2,7 +2,6 @@ package com.example.todoapp.model;
 
 import com.example.todoapp.enums.Priority;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -34,6 +33,9 @@ public class Todo {
     @Column(nullable = false)
     private boolean completed = false;
 
+    @Column(nullable = false)
+    private boolean reminderSent = false;
+
     @Column(updatable = false, nullable = false)
     private long createdAt;
 
@@ -49,10 +51,6 @@ public class Todo {
     @Column(name = "tag")
     private List<String> tags;
 
-    @Email(message = "Geçerli bir e-posta adresi olmalıdır (Entity Validasyonu)")
-    @Column(nullable = false)
-    private String userEmail;
-
-    @Column(nullable = false)
-    private boolean reminderSent = false;
+    @NotBlank(message = "E-posta alanı boş olamaz.")
+    String userEmail;
 }

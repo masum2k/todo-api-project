@@ -21,7 +21,7 @@ public class TodoReminderService {
     private final TodoRepository todoRepository;
     private final EmailEventProducer emailEventProducer;
 
-    private static final long NOTIFICATION_SECONDS = 30;
+    private static final long NOTIFICATION_WINDOW_SECONDS = 30;
 
     @Scheduled(fixedRateString = "${todo.reminder.schedule.rate}")
     @Transactional
@@ -29,9 +29,9 @@ public class TodoReminderService {
 
         log.info("Hatırlatıcılar kontrol ediliyor...");
 
-        long notificationTime = Instant.now().plus(NOTIFICATION_SECONDS, ChronoUnit.SECONDS).toEpochMilli();
+        long notificationTime = Instant.now().plus(NOTIFICATION_WINDOW_SECONDS, ChronoUnit.SECONDS).toEpochMilli();
 
-        List<Todo> todosToSend = todoRepository.findPendingReminders(notificationTime);
+        List<Todo> todosToSend = todoRepository.findByDeadlineIsNotNullAndDeadlineLessThanEqualAndCompletedFalseAndReminderSentFalse(notificationTime); //
 
         if (todosToSend.isEmpty()) {
             log.info("Gönderilecek yeni hatırlatıcı bulunamadı.");
