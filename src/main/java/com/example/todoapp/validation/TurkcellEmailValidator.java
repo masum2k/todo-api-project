@@ -6,7 +6,6 @@ import jakarta.validation.ConstraintValidatorContext;
 public class TurkcellEmailValidator implements ConstraintValidator<ValidTurkcellEmail, String> {
 
     private static final String ALLOWED_DOMAIN = "turkcell.com.tr";
-    private static final String REJECTED_DOMAIN = "hotmail.com";
 
     @Override
     public boolean isValid(String email, ConstraintValidatorContext context) {
@@ -21,11 +20,6 @@ public class TurkcellEmailValidator implements ConstraintValidator<ValidTurkcell
         }
 
         String domain = email.substring(atIndex + 1);
-
-
-        if (REJECTED_DOMAIN.equalsIgnoreCase(domain)) {
-            return false;
-        }
 
         return ALLOWED_DOMAIN.equalsIgnoreCase(domain);
     }
