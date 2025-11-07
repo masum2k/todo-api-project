@@ -19,10 +19,14 @@ public interface TodoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", expression = "java(Instant.now().toEpochMilli())")
     @Mapping(target = "completed", constant = "false")
+    @Mapping(target = "userEmail", ignore = true)
+    @Mapping(target = "reminderSent", ignore = true)
     Todo toEntity(TodoCreateRequest request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "userEmail", ignore = true)
+    @Mapping(target = "reminderSent", ignore = true)
     void updateEntity(TodoUpdateRequest request, @MappingTarget Todo todo);
 }

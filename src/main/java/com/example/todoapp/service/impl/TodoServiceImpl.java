@@ -29,26 +29,27 @@ public class TodoServiceImpl implements TodoService {
     private final TodoRepository todoRepository;
     private final TodoMapper todoMapper;
 
-
     @Override
-    public TodoResponse createTodo(TodoCreateRequest createRequest) {
+    public TodoResponse createTodo(TodoCreateRequest createRequest, String userEmail) {
         Todo todo = todoMapper.toEntity(createRequest);
-        Todo savedTodo = todoRepository.save(todo);
 
+        todo.setUserEmail(userEmail);
+
+        Todo savedTodo = todoRepository.save(todo);
         return todoMapper.toResponse(savedTodo);
     }
 
     @Override
-    public TodoResponse getTodoById(Long id) {
-        Todo todo = todoRepository.findById(id)
+    public TodoResponse getTodoById(Long id, String userEmail) {
+        Todo todo = todoRepository.findByIdAndUserEmail(id, userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id));
 
         return todoMapper.toResponse(todo);
     }
 
     @Override
-    public TodoResponse updateTodo(Long id, TodoUpdateRequest updateRequest) {
-        Todo existingTodo = todoRepository.findById(id)
+    public TodoResponse updateTodo(Long id, TodoUpdateRequest updateRequest, String userEmail) {
+        Todo existingTodo = todoRepository.findByIdAndUserEmail(id, userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id));
 
         todoMapper.updateEntity(updateRequest, existingTodo);
@@ -58,17 +59,19 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public void deleteTodo(Long id) {
-        if (!todoRepository.existsById(id)) {
+    public void deleteTodo(Long id, String userEmail) {
+        if (!todoRepository.existsByIdAndUserEmail(id, userEmail)) {
             throw new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id);
         }
+
         todoRepository.deleteById(id);
     }
 
     @Override
-    public TodoResponse updateTodoCompletion(Long id, boolean isCompleted) {
-        Todo existingTodo = todoRepository.findById(id)
+    public TodoResponse updateTodoCompletion(Long id, boolean isCompleted, String userEmail) {
+        Todo existingTodo = todoRepository.findByIdAndUserEmail(id, userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id));
+
         existingTodo.setCompleted(isCompleted);
         Todo updatedTodo = todoRepository.save(existingTodo);
 
@@ -77,11 +80,12 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public Page<TodoResponse> getAllTodos(Boolean completed, Priority priority,
-                                          String tag, Boolean overdue, Pageable pageable) {
+                                          String tag, Boolean overdue, String userEmail, Pageable pageable) {
 
         long now = Instant.now().toEpochMilli();
+
         Page<Long> todoIdsPage = todoRepository.findTodoIds(
-                completed, priority, tag, overdue, now, pageable
+                completed, priority, tag, overdue, userEmail, now, pageable
         );
 
         if (todoIdsPage.getContent().isEmpty()) {

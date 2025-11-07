@@ -13,26 +13,38 @@ import org.springframework.data.domain.Pageable;
 public interface TodoService {
 
     TodoResponse createTodo(
-            @Valid @NotNull(message = "Create request null olamaz") TodoCreateRequest createRequest
+            @Valid @NotNull(message = "Create request null olamaz") TodoCreateRequest createRequest,
+            String userEmail
     );
 
     TodoResponse getTodoById(
-            @NotNull(message = "ID null olamaz") @Min(value = 1, message = "ID 1'den küçük olamaz") Long id
+            @NotNull(message = "ID null olamaz") @Min(value = 1, message = "ID 1'den küçük olamaz") Long id,
+            String userEmail
     );
 
     TodoResponse updateTodo(
             @NotNull(message = "ID null olamaz") @Min(value = 1, message = "ID 1'den küçük olamaz") Long id,
-            @Valid @NotNull(message = "Update request null olamaz") TodoUpdateRequest updateRequest
+            @Valid @NotNull(message = "Update request null olamaz") TodoUpdateRequest updateRequest,
+            String userEmail
     );
 
     void deleteTodo(
-            @NotNull(message = "ID null olamaz") @Min(value = 1, message = "ID 1'den küçük olamaz") Long id
+            @NotNull(message = "ID null olamaz") @Min(value = 1, message = "ID 1'den küçük olamaz") Long id,
+            String userEmail
     );
 
     TodoResponse updateTodoCompletion(
             @NotNull(message = "ID null olamaz") @Min(value = 1, message = "ID 1'den küçük olamaz") Long id,
-            boolean isCompleted
+            boolean isCompleted,
+            String userEmail
     );
 
-    Page<TodoResponse> getAllTodos(Boolean completed, Priority priority, String tag, Boolean overdue, Pageable pageable);
+    Page<TodoResponse> getAllTodos(
+            Boolean completed,
+            Priority priority,
+            String tag,
+            Boolean overdue,
+            String userEmail,
+            Pageable pageable
+    );
 }

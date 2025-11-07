@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+// YENİ IMPORT: Güvenlik konteksinden kullanıcıyı almak için
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,10 +21,15 @@ public class TodoController {
 
     private final TodoService todoService;
 
+    private String getAuthenticatedUserEmail() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TodoResponse createTodo(@Valid @RequestBody TodoCreateRequest createRequest) {
-        return todoService.createTodo(createRequest);
+        String userEmail = getAuthenticatedUserEmail();
+        return todoService.createTodo(createRequest, userEmail);
     }
 
     @GetMapping
@@ -33,28 +40,32 @@ public class TodoController {
             @RequestParam(name = "overdue", required = false) Boolean overdue,
             Pageable pageable) {
 
-        return todoService.getAllTodos(completed, priority, tag, overdue, pageable);
+        String userEmail = getAuthenticatedUserEmail();
+        return todoService.getAllTodos(completed, priority, tag, overdue, userEmail, pageable);
     }
 
     @GetMapping("/{id}")
     public TodoResponse getTodoById(@PathVariable Long id) {
-        return todoService.getTodoById(id);
+        String userEmail = getAuthenticatedUserEmail();
+        return todoService.getTodoById(id, userEmail);
     }
 
     @PutMapping("/{id}")
     public TodoResponse updateTodo(@PathVariable Long id, @Valid @RequestBody TodoUpdateRequest updateRequest) {
-        return todoService.updateTodo(id, updateRequest);
+        String userEmail = getAuthenticatedUserEmail();
+        return todoService.updateTodo(id, updateRequest, userEmail);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTodo(@PathVariable Long id) {
-        todoService.deleteTodo(id);
+        String userEmail = getAuthenticatedUserEmail();
+        todoService.deleteTodo(id, userEmail);
     }
 
-    @PatchMapping("/{id}/completion")
+    @PatchMapping("/{id}/completion") // Bu metot ismini @PutMapping olarak değiştirmek daha doğru olabilir
     public TodoResponse updateTodoCompletion(@PathVariable Long id, @RequestParam boolean isCompleted) {
-        return todoService.updateTodoCompletion(id, isCompleted);
+        String userEmail = getAuthenticatedUserEmail();
+        return todoService.updateTodoCompletion(id, isCompleted, userEmail);
     }
-
 }
