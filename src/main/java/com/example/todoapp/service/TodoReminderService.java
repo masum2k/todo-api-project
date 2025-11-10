@@ -28,7 +28,7 @@ public class TodoReminderService {
 
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-                    .withZone(ZoneId.systemDefault());
+                    .withZone(ZoneId.of("Europe/Istanbul"));
 
     @Scheduled(fixedRateString = "${todo.reminder.schedule.rate}")
     @Transactional
@@ -52,17 +52,37 @@ public class TodoReminderService {
 
     private void sendReminderAndMarkAsSent(Todo todo) {
         try {
+            long now = Instant.now().toEpochMilli();
+
+            boolean isOverdue = todo.getDeadline() < now;
+
             String formattedDeadline = DATE_FORMATTER.format(Instant.ofEpochMilli(todo.getDeadline()));
+
+            String subject;
+            String body;
+
+            if (isOverdue) {
+                subject = "GÖREV SÜRESİ DOLDU: " + todo.getTitle();
+                body = String.format(
+                        "'%s' başlıklı görevinizin son tarihi geçti!%n%nSon Tarih: %s%n%nÖncelik: %s",
+                        todo.getTitle(),
+                        formattedDeadline,
+                        todo.getPriority()
+                );
+            } else {
+                subject = "Todo Reminder: " + todo.getTitle();
+                body = String.format(
+                        "Your task '%s' is approaching its deadline!%n%nDeadline: %s%n%nPriority: %s",
+                        todo.getTitle(),
+                        formattedDeadline,
+                        todo.getPriority()
+                );
+            }
 
             EmailSendEvent event = new EmailSendEvent(
                     todo.getUserEmail(),
-                    "Todo Reminder: " + todo.getTitle(),
-                    String.format(
-                            "Your task '%s' is approaching its deadline!%n%nDeadline: %s%n%nPriority: %s",
-                            todo.getTitle(),
-                            formattedDeadline,
-                            todo.getPriority()
-                    )
+                    subject,
+                    body
             );
 
             emailEventProducer.sendEmailEvent(event);
