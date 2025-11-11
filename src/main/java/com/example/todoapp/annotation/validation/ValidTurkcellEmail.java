@@ -1,4 +1,4 @@
-package com.example.todoapp.validation; // Yeni paket
+package com.example.todoapp.annotation.validation; // Yeni paket
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

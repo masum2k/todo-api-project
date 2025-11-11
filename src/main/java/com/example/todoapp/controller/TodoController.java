@@ -1,5 +1,6 @@
 package com.example.todoapp.controller;
 
+import com.example.todoapp.annotation.TrackExecutionTime;
 import com.example.todoapp.dto.TodoCreateRequest;
 import com.example.todoapp.dto.TodoResponse;
 import com.example.todoapp.dto.TodoUpdateRequest;
@@ -22,6 +23,7 @@ public class TodoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @TrackExecutionTime
     public TodoResponse createTodo(
             @Valid @RequestBody TodoCreateRequest createRequest,
             Authentication authentication) {
