@@ -28,7 +28,7 @@ public class LoggingAspect {
         long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
 
-        log.info("API Metodu: '{}' - Süre: {} ms [AOP @TrackExecutionTime]",
+        log.info("API Methodu: '{}' - Süre: {} ms ",
                 joinPoint.getSignature().toShortString(),
                 duration);
 

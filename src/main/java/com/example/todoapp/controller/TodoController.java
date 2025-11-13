@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/todos")
 @RequiredArgsConstructor
+@TrackExecutionTime
 public class TodoController {
 
     private final TodoService todoService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @TrackExecutionTime
     public TodoResponse createTodo(
             @Valid @RequestBody TodoCreateRequest createRequest,
             Authentication authentication) {
