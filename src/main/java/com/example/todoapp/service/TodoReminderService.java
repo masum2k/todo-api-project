@@ -28,7 +28,7 @@ public class TodoReminderService {
 
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-                    .withZone(ZoneId.of("Europe/Istanbul"));
+                    .withZone(ZoneId.of("Europe/Istanbul")); //system default
 
     @Scheduled(fixedRateString = "${todo.reminder.schedule.rate}")
     @Transactional

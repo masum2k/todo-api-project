@@ -23,7 +23,7 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
             "    (:overdue = true AND t.deadline IS NOT NULL AND t.deadline < :now) OR " +
             "    (:overdue = false AND (t.deadline IS NULL OR t.deadline >= :now))" +
             ") AND " +
-            "t.userEmail = :userEmail")
+            "t.userEmail = :userEmail") //derived query
     Page<Long> findTodoIds(
             @Param("completed") Boolean completed,
             @Param("priority") Priority priority,
