@@ -2,7 +2,6 @@ package com.example.todoapp.dto;
 
 import com.example.todoapp.enums.Priority;
 
-import java.io.Serializable;
 import java.util.List;
 
 public record TodoResponse(
@@ -15,5 +14,5 @@ public record TodoResponse(
         Priority priority,
         List<String> tags,
         String userEmail
-) implements Serializable {
+){
 }
