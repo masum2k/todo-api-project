@@ -10,6 +10,9 @@ import com.example.todoapp.model.Todo;
 import com.example.todoapp.repository.TodoRepository;
 import com.example.todoapp.service.TodoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +43,7 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
+    @Cacheable(value = "todos", key = "#id")
     public TodoResponse getTodoById(Long id, String userEmail) {
         Todo todo = todoRepository.findByIdAndUserEmail(id, userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id));
@@ -48,6 +52,7 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
+    @CachePut(value = "todos", key = "#id")
     public TodoResponse updateTodo(Long id, TodoUpdateRequest updateRequest, String userEmail) {
         Todo existingTodo = todoRepository.findByIdAndUserEmail(id, userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id));
@@ -59,6 +64,7 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
+    @CacheEvict(value = "todos", key = "#id")
     public void deleteTodo(Long id, String userEmail) {
         if (!todoRepository.existsByIdAndUserEmail(id, userEmail)) {
             throw new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id);
@@ -68,6 +74,7 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
+    @CachePut(value = "todos", key = "#id")
     public TodoResponse updateTodoCompletion(Long id, boolean isCompleted, String userEmail) {
         Todo existingTodo = todoRepository.findByIdAndUserEmail(id, userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException(TODO_NOT_FOUND_MESSAGE + id));

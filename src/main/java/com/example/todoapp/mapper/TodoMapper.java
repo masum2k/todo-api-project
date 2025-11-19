@@ -27,6 +27,6 @@ public interface TodoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "userEmail", ignore = true)
-    @Mapping(target = "reminderSent", ignore = true)
+    @Mapping(target = "reminderSent", constant = "false")
     void updateEntity(TodoUpdateRequest request, @MappingTarget Todo todo);
 }
